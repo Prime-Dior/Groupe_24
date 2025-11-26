@@ -13,12 +13,11 @@ import com.medipass.user.*;
 import com.medipass.service.*;
 
 /**
- * Application MediPass - Système d'Information Médical Point d'entrée de
- * l'application Gère l'authentification et dispatche vers les interfaces
- * utilisateur appropriées
+ * Application MediPass - Système d'Information Médical
+ * Point d'entrée de l'application
+ * Gère l'authentification et dispatche vers les interfaces utilisateur appropriées
  */
 public class Main {
-
     private static final Scanner sc = new Scanner(System.in);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -44,15 +43,13 @@ public class Main {
             String choix = sc.nextLine().trim();
 
             switch (choix) {
-                case "1" ->
-                    handleAuthentification();
+                case "1" -> handleAuthentification();
                 case "2" -> {
                     sauvegarderDonnees();
                     System.out.println("Au revoir!");
                     running = false;
                 }
-                default ->
-                    System.out.println("❌ Choix invalide. Veuillez réessayer.");
+                default -> System.out.println("❌ Choix invalide. Veuillez réessayer.");
             }
         }
         sc.close();
@@ -86,12 +83,11 @@ public class Main {
                     menu.afficherMenu();
                 }
                 case Administrateur admin -> {
-                    MenuInterface menu = new AdminUI(sc, admin, patientService, consultationService,
-                            adminService, statsService, dataService);
+                    MenuInterface menu = new AdminUI(sc, admin, patientService, consultationService, 
+                        adminService, statsService, dataService);
                     menu.afficherMenu();
                 }
-                default ->
-                    System.out.println("Menu non disponible pour ce rôle.");
+                default -> System.out.println("Menu non disponible pour ce rôle.");
             }
             auth.logout();
         } else {
@@ -106,7 +102,7 @@ public class Main {
         // Essayer de charger les données
         List<Patient> patients = dataService.loadPatients();
         List<ProfessionnelSante> pros = dataService.loadProfessionnels();
-
+        
         // Toujours créer l'admin par défaut
         Administrateur admin = new Administrateur("admin", "admin");
         auth.register(admin);
@@ -114,18 +110,16 @@ public class Main {
 
         if (!patients.isEmpty() || !pros.isEmpty()) {
             System.out.println("Chargement des données...");
-            for (Patient p : patients) {
-                patientService.creerPatient(p);
-            }
+            for (Patient p : patients) patientService.creerPatient(p);
             for (ProfessionnelSante p : pros) {
                 adminService.creerCompte(p);
                 auth.register(p);
             }
-
+            
             // Charger consultations après avoir chargé patients et pros
             List<Consultation> consultations = dataService.loadConsultations(patientService.getPatients(), adminService.getProfessionnels());
-
-            for (Consultation c : consultations) {
+           
+            for(Consultation c : consultations) {
                 consultationService.ajouterConsultationExistante(c);
             }
 
@@ -147,6 +141,7 @@ public class Main {
     }
 
     // --- Méthodes utilitaires pour la saisie sécurisée ---
+
     private static String lireChaine(String prompt) {
         System.out.print(prompt);
         return sc.nextLine().trim();

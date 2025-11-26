@@ -1,73 +1,51 @@
-package com.medipass.models;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+package com.medipass.model;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Dossier médical simple : liste d'antécédents et de consultations.
+ * Met à jour la date de dernière modification à chaque changement.
+ */
 public class DossierMedical {
-    private int idDossier;
-    private String dateCreation;
-    private String dateDerniereModification;
-    private List<Antecedent> antecedents;
-    // private List<Consultation> consultations; // Pour plus tard
-    private Patient patient;
+    private static int counter = 1;
+    private final int idDossier;
+    private final Patient patient;
+    private final LocalDateTime dateCreation;
+    private final List<Antecedent> antecedents = new ArrayList<>();
+    private final List<Consultation> consultations = new ArrayList<>();
 
-    private static int compteur = 5000;
-    
     public DossierMedical(Patient patient) {
-        this.idDossier = compteur++;
+        this.idDossier = counter++;
         this.patient = patient;
-        this.antecedents = new ArrayList<>();
-        // this.consultations = new ArrayList<>();
-        
-        // Date de création
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        this.dateCreation = LocalDate.now().format(formatter);
-        this.dateDerniereModification = this.dateCreation;
+        this.dateCreation = LocalDateTime.now();
     }
 
-    // Getters
-    public int getIdDossier() { 
-        return idDossier; 
+    public int getIdDossier() { return idDossier; }
+    public Patient getPatient() { return patient; }
+    public LocalDateTime getDateCreation() { return dateCreation; }
+
+    public void ajouterAntecedent(Antecedent a) {
+        antecedents.add(a);
     }
-    public String getDateCreation() { 
-        return dateCreation; 
+
+    public void ajouterConsultation(Consultation c) {
+        consultations.add(c);
     }
-    public String getDateDerniereModification() { 
-        return dateDerniereModification; 
-    }
-    public List<Antecedent> getAntecedents() { 
-        return antecedents; 
-    }
-    
-    // Les autres Méthodes
-    public void ajouterAntecedent(Antecedent ant) {
-        if (ant != null) {
-            antecedents.add(ant);
-            
-            // Mise à jour de la date
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            this.dateDerniereModification = LocalDate.now().format(formatter);
+
+    public List<Antecedent> getAntecedents() { return antecedents; }
+    public List<Consultation> getConsultations() { return consultations; }
+
+    // Fournit un historique textuel simple pour affichage console
+    public List<String> getHistorique() {
+        List<String> out = new ArrayList<>();
+        for (Consultation c : consultations) {
+            out.add(c.toString());
         }
-    }
-    
-    public void afficherAntecedents() {
-        if (antecedents.isEmpty()) {
-            System.out.println("  Aucun antécédent enregistré.");
-            return;
+        for (Antecedent a : antecedents) {
+            out.add("Antecedent: " + a.toString());
         }
-        
-        System.out.println("\n  Antécédents médicaux (" + antecedents.size() + "):");
-        for (Antecedent ant : antecedents) {
-            ant.afficher();
-        }
-    }
-    
-    public void getHistorique() {
-        System.out.println("\n=== Dossier Médical #" + idDossier + " ===");
-        System.out.println("Patient: " + patient.getNom() + " " + patient.getPrenom());
-        System.out.println("Créé le: " + dateCreation);
-        System.out.println("Dernière modification: " + dateDerniereModification);
-        afficherAntecedents();
+        return out;
     }
 }

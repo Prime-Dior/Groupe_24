@@ -8,11 +8,10 @@ import com.medipass.user.ProfessionnelSante;
 import com.medipass.user.Utilisateur;
 
 /**
- * Service de gestion administrative. Permet de créer, modifier et supprimer des
- * comptes et des droits d'accès.
+ * Service de gestion administrative.
+ * Permet de créer, modifier et supprimer des comptes et des droits d'accès.
  */
 public class AdministrateurService {
-
     private final List<Utilisateur> utilisateurs = new ArrayList<>();
     private final List<ProfessionnelSante> professionnels = new ArrayList<>();
 
@@ -24,12 +23,12 @@ public class AdministrateurService {
             return false;
         }
         utilisateurs.add(utilisateur);
-
+        
         // Si c'est un professionnel, l'ajouter aussi à la liste spécifique
         if (utilisateur instanceof ProfessionnelSante) {
             professionnels.add((ProfessionnelSante) utilisateur);
         }
-
+        
         return true;
     }
 
@@ -41,12 +40,12 @@ public class AdministrateurService {
         if (utilisateur == null) {
             return false;
         }
-
+        
         utilisateurs.remove(utilisateur);
         if (utilisateur instanceof ProfessionnelSante) {
             professionnels.remove(utilisateur);
         }
-
+        
         return true;
     }
 
@@ -163,7 +162,7 @@ public class AdministrateurService {
         if (utilisateur == null) {
             return "Utilisateur non trouvé";
         }
-
+        
         StringBuilder sb = new StringBuilder();
         sb.append("=== INFORMATIONS UTILISATEUR ===\n");
         sb.append("Login: ").append(utilisateur.getLoginID()).append("\n");
@@ -173,14 +172,14 @@ public class AdministrateurService {
         sb.append("Téléphone: ").append(utilisateur.getTelephone()).append("\n");
         sb.append("Rôle: ").append(utilisateur.getRole()).append("\n");
         sb.append("Statut: ").append(utilisateur.isActif() ? "Actif" : "Inactif").append("\n");
-
+        
         if (utilisateur instanceof ProfessionnelSante) {
             ProfessionnelSante pro = (ProfessionnelSante) utilisateur;
             sb.append("Spécialité: ").append(pro.getSpecialite()).append("\n");
             sb.append("Numéro d'ordre: ").append(pro.getNumeroOrdre()).append("\n");
             sb.append("Consultations programmées: ").append(pro.getNombreConsultations()).append("\n");
         }
-
+        
         return sb.toString();
     }
 

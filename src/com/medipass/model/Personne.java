@@ -1,75 +1,45 @@
-package com.medipass.models;
+package com.medipass.model;
 
+import java.time.LocalDate;
+import java.time.Period;
+
+/**
+ * Classe abstraite représentant une personne.
+ * Contient les champs de base et des helpers simples.
+ */
 public abstract class Personne {
     protected int id;
     protected String nom;
     protected String prenom;
-    protected String dateNaissance;
+    protected LocalDate dateNaissance;
     protected char sexe;
     protected String adresse;
     protected String telephone;
     protected String email;
-    
-    public Personne() {
-        this.id = 0;
-        this.sexe = 'M';
+
+    public Personne(int id, String nom, String prenom) {
+        this.id = id;
+        this.nom = nom;
+        this.prenom = prenom;
     }
-    
-    // Getters
-    public int getId() {
-        return id; 
-    }
-    public String getNom() { 
-        return nom; 
-    }
-    public String getPrenom() { 
-        return prenom;
-    }
-    public String getDateNaissance() { 
-        return dateNaissance; 
-    }
-    public char getSexe() { 
-        return sexe; 
-    }
-    public String getAdresse() { 
-        return adresse; 
-    }
-    public String getTelephone() { 
-        return telephone; 
-    }
-    public String getEmail() { 
-        return email; 
-    }
-    
-    // Setters
-    public void setNom(String n) { 
-        this.nom = n; 
-    }
-    public void setPrenom(String p) {
-        this.prenom = p;
-    }
-    public void setDateNaissance(String date) { 
-        this.dateNaissance = date; 
-    }
-    
-    public void setSexe(char s) {
-        if (s == 'M' || s == 'F' || s == 'm' || s == 'f') {
-            this.sexe = Character.toUpperCase(s);
-        }
-    }
-    
-    public void setAdresse(String addr) { 
-        this.adresse = addr; 
-    }
-    public void setTelephone(String tel) { 
-        this.telephone = tel; 
-    }
-    public void setEmail(String mail) { 
-        this.email = mail; 
-    }
-    
+
+    // Getters simples
+    public int getId() { return id; }
+    public String getNom() { return nom; }
+    public String getPrenom() { return prenom; }
+
+    // Retourne l'âge basé sur dateNaissance ou -1 si inconnu
     public int getAge() {
-        // Il faudra calculer l'âge réel
-        return 0;
+        if (dateNaissance == null) return -1;
+        return Period.between(dateNaissance, LocalDate.now()).getYears();
     }
+
+    // Setters utilitaires
+    public void setNom(String n){ this.nom = n; }
+    public void setPrenom(String p){ this.prenom = p; }
+    public void setDateNaissance(LocalDate d){ this.dateNaissance = d; }
+    public void setSexe(char s){ this.sexe = s; }
+    public void setAdresse(String a){ this.adresse = a; }
+    public void setTelephone(String t){ this.telephone = t; }
+    public void setEmail(String e){ this.email = e; }
 }

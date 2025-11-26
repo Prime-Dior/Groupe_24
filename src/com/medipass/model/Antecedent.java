@@ -1,58 +1,29 @@
-package com.medipass.models;
+package com.medipass.model;
 
+import java.time.LocalDate;
+
+/**
+ * Représente un antécédent médical (simple).
+ */
 public class Antecedent {
-    private int idAntecedent;
-    private String type;
-    private String description;
-    private String date;
-    private String gravite;
-    private boolean actif;
+    private static int counter=1;
+    private final int idAntecedent;
+    private final String type;
+    private final LocalDate date;
+    private final String gravite;
+    private final boolean actif;
 
-    private static int compteur = 1; 
-
-    public Antecedent(String type, String description, String date) {
-        this.idAntecedent = compteur++;
+    public Antecedent(String type, String description, LocalDate date, String gravite, boolean actif) {
+        this.idAntecedent = counter++;
         this.type = type;
-        this.description = description;
         this.date = date;
-        this.gravite = "Moyenne";
-        this.actif = true;
+        this.gravite = gravite;
+        this.actif = actif;
     }
 
-    // Getters
-    public int getIdAntecedent() { 
-        return idAntecedent;
+    public int getIdAntecedent() { return idAntecedent; }
+    @Override
+    public String toString(){
+        return String.format("[%d] %s (%s) - %s - actif:%s", idAntecedent, type, date, gravite, actif);
     }
-    public String getType() {
-         return type; 
-    }
-    public String getDescription() { 
-        return description; 
-    }
-    public String getDate() { 
-        return date; 
-    }
-    public String getGravite() { 
-        return gravite; 
-    }
-    public boolean isActif() {
-        return actif; 
-    }
-    
-    // Setters
-    public void setGravite(String g) { 
-        this.gravite = g; 
-    }
-    public void setActif(boolean a) { 
-        this.actif = a; 
-    }
-
-    public void afficher() {
-        System.out.print("  - [" + type + "] " + description + " (" + date + ", gravité: " + gravite + ")");
-        if (!actif) {
-            System.out.print(" [Inactif !]");
-        }
-        System.out.println();
-    }
-
 }
