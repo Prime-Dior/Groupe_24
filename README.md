@@ -10,8 +10,8 @@ cd Groupe_24
 Commande de compilation: 
 
 ```bash
-  javac -d bin src/com/medipass/app/Main.java src/com/medipass/model/*.java src/com/medipass/security/*.java src/com/medipass/service/*.java src/com/medipass/ui/*.java src/com/medipass/user/*.java
-"
+javac -d bin src/com/medipass/app/Main.java src/com/medipass/model/*.java src/com/medipass/security/*.java src/com/medipass/service/*.java src/com/medipass/ui/*.java src/com/medipass/user/*.java
+
    ```
 
 Commande d'exécution:
