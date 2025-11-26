@@ -57,7 +57,7 @@ public class Main {
 
     private static void afficherMenuPrincipal() {
         System.out.println("\n╔════════════════════════════════╗");
-        System.out.println("║     MENU PRINCIPAL              ║");
+        System.out.println("║     MENU PRINCIPAL             ║");
         System.out.println("╠════════════════════════════════╣");
         System.out.println("║ 1) Se connecter                ║");
         System.out.println("║ 2) Quitter                     ║");
