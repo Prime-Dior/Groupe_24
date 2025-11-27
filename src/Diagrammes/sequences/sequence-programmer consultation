@@ -1,0 +1,68 @@
+@startuml ProgrammerConsultation
+title Programmer une consultation
+
+actor "Professionnel de santé" as ProfSante
+participant "InterfaceConsole" as UI
+participant "ConsultationService" as ConsultService
+participant "ProfessionnelSante" as ProfObj
+participant "Patient" as Patient
+participant "DossierMedical" as Dossier
+database "BaseDeDonnees" as DB
+
+ProfSante -> UI : Demander programmation consultation
+activate UI
+
+UI -> DB : listerPatients()
+activate DB
+DB --> UI : listePatients
+deactivate DB
+
+UI --> ProfSante : Afficher liste patients
+ProfSante -> UI : Sélectionner patient
+
+UI -> DB : rechercherPatient(idPatient)
+activate DB
+DB --> UI : patient
+deactivate DB
+
+UI --> ProfSante : Formulaire consultation
+ProfSante -> UI : Saisir date, heure, motif
+
+UI -> ConsultService : programmerConsultation(date, heure, motif, idProf, idPatient)
+activate ConsultService
+
+ConsultService -> DB : chargerProfessionnel(idProf)
+activate DB
+DB --> ConsultService : professionnel
+deactivate DB
+
+ConsultService -> ProfObj : estDisponible(date, heure)
+alt Disponible
+    ConsultService -> DB : creerConsultation(date, heure, motif, idProf, idPatient)
+    activate DB
+    DB --> ConsultService : consultationCreee
+    deactivate DB
+
+    ConsultService -> DB : chargerDossierMedical(idPatient)
+    activate DB
+    DB --> ConsultService : dossierMedical
+    deactivate DB
+
+    ConsultService -> Dossier : ajouterConsultation(consultation)
+    ConsultService -> DB : sauvegarderConsultation(consultation)
+    activate DB
+    DB --> ConsultService : confirmation
+    deactivate DB
+
+    ConsultService --> UI : succes
+    deactivate ConsultService
+    UI --> ProfSante : Confirmation programmation
+else Non disponible
+    ConsultService --> UI : erreurDisponibilite
+    deactivate ConsultService
+    UI --> ProfSante : Message indisponibilité
+end
+
+deactivate UI
+
+@enduml
