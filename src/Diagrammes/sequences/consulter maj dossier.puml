@@ -1,0 +1,58 @@
+@startuml ConsulterMajDossier
+title Consulter et mettre à jour dossier médical
+
+actor "Professionnel de santé" as ProfSante
+participant "InterfaceConsole" as UI
+participant "PatientService" as PatientService
+participant "DossierMedical" as Dossier
+database "BaseDeDonnees" as DB
+
+ProfSante -> UI : Demander consultation dossier
+activate UI
+
+UI --> ProfSante : Demande idPatient
+ProfSante -> UI : Saisir idPatient
+
+UI -> PatientService : consulterDossier(idPatient)
+activate PatientService
+
+PatientService -> DB : rechercherPatient(idPatient)
+activate DB
+DB --> PatientService : patient
+deactivate DB
+
+PatientService -> DB : chargerDossierMedical(idPatient)
+activate DB
+DB --> PatientService : dossierMedical (avec antécédents, consultations)
+deactivate DB
+
+PatientService --> UI : dossierComplet
+deactivate PatientService
+
+UI --> ProfSante : Affichage dossier complet
+
+ProfSante -> UI : Ajouter antécédent
+UI --> ProfSante : Formulaire antécédent
+ProfSante -> UI : Saisir informations
+
+UI -> PatientService : ajouterAntecedent(idPatient, infosAntecedent)
+activate PatientService
+
+PatientService -> DB : creerAntecedent(idPatient, infosAntecedent)
+activate DB
+DB --> PatientService : antecedentCree
+deactivate DB
+
+PatientService -> DB : mettreAJourDossier(idPatient)
+activate DB
+DB --> PatientService : confirmationMiseAJour
+deactivate DB
+
+PatientService --> UI : succes
+deactivate PatientService
+
+UI --> ProfSante : Confirmation ajout antécédent
+
+deactivate UI
+
+@enduml

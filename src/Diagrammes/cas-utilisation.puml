@@ -2,55 +2,47 @@
 left to right direction
 skinparam packageStyle rectangle
 
-' Définition des acteurs
-actor "Professionnel Santé" as Pro
-actor "Administrateur" as Admin
 actor "Utilisateur" as User
+actor "Professionnel de santé" as Pro
+actor "Administrateur" as Admin
 
-' Héritage des acteurs (Les flèches qui contournent le cadre)
 User <|-- Pro
 User <|-- Admin
 
-rectangle "System d'information médical" {
+rectangle "Système d'information médical" {
 
-    ' Cas d'utilisation pour le Professionnel de Santé
-    usecase "Inscrire patient(s)" as UC_Inscrire
-    usecase "Programmer et suivre\nconsultation de(s) patient(s)" as UC_Programmer
-    usecase "Consulter et Mettre ajout\ndossier medical" as UC_Dossier
-    usecase "Verifier disponibiliter" as UC_Dispo
+  usecase "S'authentifier" as UC_Auth
 
-    ' Cas d'utilisation pour l'Administrateur
-    usecase "Créer compte d'utilisateur" as UC_CreerCompte
-    usecase "Supprimer compte d'utilisateur" as UC_SupprimerCompte
-    usecase "Gerer les droits d'acces" as UC_Droits
-    usecase "Consulter statistiques" as UC_Stats
+  usecase "Inscrire patient" as UC_Inscrire
+  usecase "Programmer et suivre consultation" as UC_Programmer
+  usecase "Consulter et mettre à jour\ndossier médical" as UC_Dossier
+  usecase "Vérifier la disponibilité" as UC_Dispo
 
-    ' Cas d'utilisation commun (Authentification)
-    usecase "S'authentifier" as UC_Auth
-
-    ' Relations Acteurs -> Cas d'utilisation
-    Pro -- UC_Inscrire
-    Pro -- UC_Programmer
-    Pro -- UC_Dossier
-
-    Admin -- UC_CreerCompte
-    Admin -- UC_SupprimerCompte
-    Admin -- UC_Droits
-    Admin -- UC_Stats
-
-    ' Relation directe de l'Utilisateur (selon le diagramme)
-    User -- UC_Auth
-
-    ' Relations <<include>> vers S'authentifier
-    UC_Inscrire ..> UC_Auth : <<include>>
-    UC_Programmer ..> UC_Auth : <<include>>
-    UC_Dossier ..> UC_Auth : <<include>>
-    UC_CreerCompte ..> UC_Auth : <<include>>
-    UC_SupprimerCompte ..> UC_Auth : <<include>>
-    UC_Droits ..> UC_Auth : <<include>>
-    UC_Stats ..> UC_Auth : <<include>>
-
-    ' Autre relation <<include>> spécifique
-    UC_Programmer ..> UC_Dispo : <<include>>
+  usecase "Créer compte utilisateur" as UC_CreerCompte
+  usecase "Supprimer compte utilisateur" as UC_SupprimerCompte
+  usecase "Gérer les droits d'accès" as UC_Droits
+  usecase "Consulter statistiques" as UC_Stats
 }
+
+Pro -- UC_Inscrire
+Pro -- UC_Programmer
+Pro -- UC_Dossier
+
+Admin -- UC_CreerCompte
+Admin -- UC_SupprimerCompte
+Admin -- UC_Droits
+Admin -- UC_Stats
+
+User -- UC_Auth
+
+UC_Inscrire ..> UC_Auth : <<include>>
+UC_Programmer ..> UC_Auth : <<include>>
+UC_Dossier ..> UC_Auth : <<include>>
+UC_CreerCompte ..> UC_Auth : <<include>>
+UC_SupprimerCompte ..> UC_Auth : <<include>>
+UC_Droits ..> UC_Auth : <<include>>
+UC_Stats ..> UC_Auth : <<include>>
+
+UC_Programmer ..> UC_Dispo : <<include>>
+
 @enduml

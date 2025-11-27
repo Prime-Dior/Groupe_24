@@ -1,0 +1,40 @@
+@startuml Authentification
+title Authentification d'un utilisateur
+
+actor "Utilisateur" as User
+participant "InterfaceConsole" as UI
+participant "AuthentificationService" as Auth
+participant "BaseDeDonnees" as DB
+
+User -> UI : Saisir loginID et motDePasse
+activate UI
+
+UI -> Auth : login(loginID, motDePasse)
+activate Auth
+
+Auth -> DB : rechercherUtilisateur(loginID)
+activate DB
+DB --> Auth : utilisateur (ou null)
+deactivate DB
+
+alt Utilisateur existe
+    Auth -> Auth : verifierMotDePasse(motDePasse)
+    
+    alt Authentification valide
+        Auth -> Auth : determinerRole()
+        Auth --> UI : connexionReussie(utilisateur, role)
+        UI --> User : Afficher menu selon rôle
+    else Authentification invalide
+        Auth --> UI : erreurAuthentification
+        UI --> User : Message erreur
+    end
+    
+else Utilisateur inexistant
+    Auth --> UI : utilisateurInconnu
+    UI --> User : Message erreur
+end
+
+deactivate Auth
+deactivate UI
+
+@enduml
