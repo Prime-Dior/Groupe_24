@@ -1,0 +1,50 @@
+@startuml CreerCompte
+title Création d'un compte utilisateur
+
+actor "Administrateur" as Admin
+participant "InterfaceConsole" as UI
+participant "AdministrateurService" as AdminService
+participant "AuthentificationService" as Auth
+database "BaseDeDonnees" as DB
+
+Admin -> UI : Demander création compte
+activate UI
+
+UI --> Admin : Choix type utilisateur
+Admin -> UI : Saisir informations et type
+
+UI -> AdminService : creerCompte(type, infosUtilisateur)
+activate AdminService
+
+AdminService -> Auth : verifierIdentifiant(loginID)
+activate Auth
+
+Auth -> DB : rechercherUtilisateur(loginID)
+activate DB
+DB --> Auth : resultat
+deactivate DB
+
+alt LoginID disponible
+    Auth --> AdminService : disponible
+    deactivate Auth
+
+    AdminService -> DB : creerUtilisateur(type, infos)
+    activate DB
+    DB --> AdminService : utilisateurCree
+    deactivate DB
+
+    AdminService --> UI : compteCree
+    deactivate AdminService
+    UI --> Admin : Confirmation création
+
+else LoginID existant
+    Auth --> AdminService : nonDisponible
+    deactivate Auth
+    AdminService --> UI : erreurLoginExistant
+    deactivate AdminService
+    UI --> Admin : Message erreur
+end
+
+deactivate UI
+
+@enduml
