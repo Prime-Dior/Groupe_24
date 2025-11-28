@@ -131,7 +131,7 @@ public class AdminUI implements MenuInterface {
 
     private void activerDesactiverCompte() {
         String login = lireChaine("Login de l'utilisateur: ");
-        String action = lireChaine("1) Activer compte utilisateur\n0) Désactiver compte utilisateur\nAction :").toLowerCase();
+        String action = lireChaine("1) Activer compte utilisateur\n0) Désactiver compte utilisateur\nAction:").toLowerCase();
 
         boolean success = false;
         if ("1".equals(action)) {
@@ -141,7 +141,7 @@ public class AdminUI implements MenuInterface {
         }
 
         if (success) {
-            System.out.println("✓ Compte " + (action == "0" ? "désactivé" : "activé") + " avec succès");
+            System.out.println("✓ Compte " + (action.equals("0")? "désactivé":"activé") + " avec succès");
             sauvegarderDonnees();
         } else {
             System.out.println("❌ Opération échouée");
