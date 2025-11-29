@@ -1,8 +1,6 @@
 package com.medipass.ui;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -25,7 +23,6 @@ public class AdminUI implements MenuInterface {
     private final AdministrateurService adminService;
     private final StatistiquesService statsService;
     private final DataService dataService;
-    private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public AdminUI(Scanner sc,
                    Administrateur admin,
@@ -146,7 +143,7 @@ public class AdminUI implements MenuInterface {
         }
     }
 
-    /* ===================== PATIENTS ===================== */
+    /* ===================== PATIENTS (ADMINISTRATIF UNIQUEMENT) ===================== */
 
     private void menuGestionPatients() {
         boolean continuer = true;
@@ -337,7 +334,7 @@ public class AdminUI implements MenuInterface {
         }
     }
 
-    /* ===================== COMPTE / SAUVEGARDE ===================== */
+    /* ===================== COMPTES & SAUVEGARDE ===================== */
 
     private void creerProfessionnel() {
         System.out.println("\n--- Création d'un professionnel de santé ---");
@@ -364,13 +361,11 @@ public class AdminUI implements MenuInterface {
         System.out.println("\n--- Suppression d'un utilisateur ---");
         String login = lireChaine("Login de l'utilisateur à supprimer: ");
 
-        // Vérifier que l'utilisateur existe
         if (adminService.findUtilisateur(login) == null) {
             System.out.println("❌ Utilisateur introuvable.");
             return;
         }
 
-        // Empêcher l'admin de se supprimer lui-même
         if (login.equals(admin.getLoginID())) {
             System.out.println("❌ Vous ne pouvez pas supprimer votre propre compte.");
             return;
