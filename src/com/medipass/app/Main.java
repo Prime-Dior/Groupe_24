@@ -1,25 +1,22 @@
 package com.medipass.app;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.List;
+import java.util.Scanner;
 
 import com.medipass.model.*;
 import com.medipass.security.AuthentificationService;
+import com.medipass.service.*;
 import com.medipass.ui.*;
 import com.medipass.user.*;
-import com.medipass.service.*;
 
-/**
- * Application MediPass - Système d'Information Médical
- * Point d'entrée de l'application
- * Gère l'authentification et dispatche vers les interfaces utilisateur appropriées
- */
 public class Main {
+
     private static final Scanner sc = new Scanner(System.in);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // Services
     private static final AuthentificationService auth = new AuthentificationService();
@@ -33,8 +30,8 @@ public class Main {
         initializationSysteme();
 
         System.out.println("╔═══════════════════════════════════════╗");
-        System.out.println("║        BIENVENUE À MEDIPASS           ║");
-        System.out.println("║  Système d'Information Médical        ║");
+        System.out.println("║         BIENVENUE À MEDIPASS          ║");
+        System.out.println("║   Système d'Information Médical       ║");
         System.out.println("╚═══════════════════════════════════════╝");
 
         boolean running = true;
@@ -65,26 +62,25 @@ public class Main {
         System.out.print("Votre choix: ");
     }
 
-    /**
-     * Gère l'authentification et dispatche vers l'interface appropriée
-     */
     private static void handleAuthentification() {
         String login = lireChaine("\nLogin: ");
         String mdp = lireChaine("Mot de passe: ");
 
         if (auth.login(login, mdp)) {
             Utilisateur u = auth.getCurrentUser();
-            System.out.println("\n✓ Connexion réussie! Bienvenue " + u.getNom() + " " + u.getPrenom());
+            System.out.println("\n✓ Connexion réussie! Bienvenue "
+                    + u.getNom() + " " + u.getPrenom());
 
-            // Dispatcher vers l'interface appropriée selon le type d'utilisateur
             switch (u) {
                 case ProfessionnelSante pro -> {
-                    MenuInterface menu = new ProfessionelUI(sc, pro, patientService, consultationService, dataService);
+                    MenuInterface menu = new ProfessionelUI(
+                            sc, pro, patientService, consultationService, dataService);
                     menu.afficherMenu();
                 }
                 case Administrateur admin -> {
-                    MenuInterface menu = new AdminUI(sc, admin, patientService, consultationService, 
-                        adminService, statsService, dataService);
+                    MenuInterface menu = new AdminUI(
+                            sc, admin, patientService, consultationService,
+                            adminService, statsService, dataService);
                     menu.afficherMenu();
                 }
                 default -> System.out.println("Menu non disponible pour ce rôle.");
@@ -95,57 +91,52 @@ public class Main {
         }
     }
 
-    /**
-     * Initialise le système avec données en mémoire ou données sauvegardées
-     */
     private static void initializationSysteme() {
-        // Essayer de charger les données
+        // Charger patients et professionnels
         List<Patient> patients = dataService.loadPatients();
         List<ProfessionnelSante> pros = dataService.loadProfessionnels();
-        
-        // Toujours créer l'admin par défaut
+
+        // Créer l’admin par défaut
         Administrateur admin = new Administrateur("admin", "admin");
         auth.register(admin);
         adminService.creerCompte(admin);
 
         if (!patients.isEmpty() || !pros.isEmpty()) {
             System.out.println("Chargement des données...");
-            
-            // Charger les patients
+
+            // Patients
             for (Patient p : patients) {
                 patientService.creerPatient(p);
             }
-            
-            // Charger les professionnels
+
+            // Professionnels
             for (ProfessionnelSante p : pros) {
                 adminService.creerCompte(p);
                 auth.register(p);
             }
-            
-            // Charger les consultations après avoir chargé patients et pros
+
+            // Consultations
             List<Consultation> consultations = dataService.loadConsultations(
-                patientService.getPatients(), 
-                adminService.getProfessionnels()
+                    patientService.getPatients(),
+                    adminService.getProfessionnels()
             );
-           
-            for(Consultation c : consultations) {
+            for (Consultation c : consultations) {
                 consultationService.ajouterConsultationExistante(c);
             }
 
-            // Charger les antécédents
+            // Antécédents
             dataService.loadAntecedents(patientService.getPatients());
 
-            System.out.println("✓ Données chargées: " + patients.size() + " patients, " + 
-                pros.size() + " professionnels, " + consultations.size() + " consultations.");
+            System.out.println("✓ Données chargées: "
+                    + patients.size() + " patients, "
+                    + pros.size() + " professionnels, "
+                    + consultations.size() + " consultations.");
         } else {
             System.out.println("ℹ Système initialisé. Aucune donnée sauvegardée.");
             sauvegarderDonnees();
         }
     }
 
-    /**
-     * Sauvegarde les données en mémoire dans les fichiers CSV
-     */
     private static void sauvegarderDonnees() {
         dataService.savePatients(patientService.getPatients());
         dataService.saveProfessionnels(adminService.getProfessionnels());
@@ -154,7 +145,7 @@ public class Main {
         System.out.println("(Données sauvegardées)");
     }
 
-    // --- Méthodes utilitaires pour la saisie sécurisée ---
+    // ---------- Méthodes utilitaires de saisie ----------
 
     private static String lireChaine(String prompt) {
         System.out.print(prompt);
@@ -180,7 +171,8 @@ public class Main {
                 String input = sc.nextLine().trim();
                 return LocalDateTime.parse(input, DATE_FORMATTER);
             } catch (DateTimeParseException e) {
-                System.out.println("❌ Format de date invalide. Utilisez 'yyyy-MM-dd HH:mm' (ex: 2023-12-25 14:30)");
+                System.out.println(
+                        "❌ Format de date invalide. Utilisez 'yyyy-MM-dd HH:mm' (ex: 2023-12-25 14:30)");
             }
         }
     }

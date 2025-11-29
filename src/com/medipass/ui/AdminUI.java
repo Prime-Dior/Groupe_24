@@ -27,9 +27,13 @@ public class AdminUI implements MenuInterface {
     private final DataService dataService;
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public AdminUI(Scanner sc, Administrateur admin, PatientService patientService,
-            ConsultationService consultationService, AdministrateurService adminService,
-            StatistiquesService statsService, DataService dataService) {
+    public AdminUI(Scanner sc,
+                   Administrateur admin,
+                   PatientService patientService,
+                   ConsultationService consultationService,
+                   AdministrateurService adminService,
+                   StatistiquesService statsService,
+                   DataService dataService) {
         this.sc = sc;
         this.admin = admin;
         this.patientService = patientService;
@@ -65,6 +69,8 @@ public class AdminUI implements MenuInterface {
             }
         }
     }
+
+    /* ===================== UTILISATEURS ===================== */
 
     private void menuGestionUtilisateurs() {
         boolean continuer = true;
@@ -106,9 +112,11 @@ public class AdminUI implements MenuInterface {
         String email = lireChaine("Nouvel email (ou vide pour ne pas changer): ");
         String telephone = lireChaine("Nouveau téléphone (ou vide pour ne pas changer): ");
 
-        boolean success = adminService.modifierContactUtilisateur(login,
+        boolean success = adminService.modifierContactUtilisateur(
+                login,
                 email.isEmpty() ? null : email,
-                telephone.isEmpty() ? null : telephone);
+                telephone.isEmpty() ? null : telephone
+        );
 
         if (success) {
             System.out.println("✓ Contact modifié avec succès");
@@ -120,7 +128,8 @@ public class AdminUI implements MenuInterface {
 
     private void activerDesactiverCompte() {
         String login = lireChaine("Login de l'utilisateur: ");
-        String action = lireChaine("1) Activer compte utilisateur\n0) Désactiver compte utilisateur\nAction:");
+        String action = lireChaine(
+                "1) Activer compte utilisateur\n0) Désactiver compte utilisateur\nAction:").toLowerCase();
 
         boolean success = false;
         if ("1".equals(action)) {
@@ -130,12 +139,14 @@ public class AdminUI implements MenuInterface {
         }
 
         if (success) {
-            System.out.println("✓ Compte " + (action.equals("0")? "désactivé":"activé") + " avec succès");
+            System.out.println("✓ Compte " + (action.equals("0") ? "désactivé" : "activé") + " avec succès");
             sauvegarderDonnees();
         } else {
             System.out.println("❌ Opération échouée");
         }
     }
+
+    /* ===================== PATIENTS ===================== */
 
     private void menuGestionPatients() {
         boolean continuer = true;
@@ -177,7 +188,8 @@ public class AdminUI implements MenuInterface {
         patient.setGroupeSanguin(lireChaine("Groupe sanguin: "));
 
         if (patientService.creerPatient(patient)) {
-            System.out.println("✓ Patient créé avec succès. Dossier ID: " + patient.getDossierMedical().getIdDossier());
+            System.out.println("✓ Patient créé avec succès. Dossier ID: "
+                    + patient.getDossierMedical().getIdDossier());
             sauvegarderDonnees();
         } else {
             System.out.println("❌ Erreur lors de la création (ID peut-être déjà utilisé)");
@@ -191,7 +203,7 @@ public class AdminUI implements MenuInterface {
             System.out.println("Aucun patient enregistré");
         } else {
             for (Patient p : patients) {
-                System.out.printf("[%d] %s %s\n", p.getId(), p.getNom(), p.getPrenom());
+                System.out.printf("[%d] %s %s%n", p.getId(), p.getNom(), p.getPrenom());
             }
         }
     }
@@ -199,13 +211,12 @@ public class AdminUI implements MenuInterface {
     private void consulterInfosAdministratives() {
         int id = lireEntier("ID du patient: ");
         Patient patient = patientService.findPatientById(id);
-        
+
         if (patient == null) {
             System.out.println("❌ Patient non trouvé");
             return;
         }
-        
-        // Afficher uniquement les informations administratives (pas les données médicales)
+
         StringBuilder sb = new StringBuilder();
         sb.append("\n=== INFORMATIONS ADMINISTRATIVES ===\n");
         sb.append("ID: ").append(patient.getId()).append("\n");
@@ -216,8 +227,8 @@ public class AdminUI implements MenuInterface {
         sb.append("Dossier médical ID: ").append(patient.getDossierMedical().getIdDossier()).append("\n");
         sb.append("\n⚠️  Les données médicales (antécédents, consultations)\n");
         sb.append("   sont accessibles uniquement par les professionnels de santé.\n");
-        
-        System.out.println(sb.toString());
+
+        System.out.println(sb);
     }
 
     private void modifierPatient() {
@@ -226,7 +237,8 @@ public class AdminUI implements MenuInterface {
         String prenom = lireChaine("Nouveau prénom (ou vide): ");
         String groupe = lireChaine("Nouveau groupe sanguin (ou vide): ");
 
-        if (patientService.modifierPatient(id,
+        if (patientService.modifierPatient(
+                id,
                 nom.isEmpty() ? null : nom,
                 prenom.isEmpty() ? null : prenom,
                 null,
@@ -237,6 +249,8 @@ public class AdminUI implements MenuInterface {
             System.out.println("❌ Patient non trouvé");
         }
     }
+
+    /* ===================== STATISTIQUES & PLANNING ===================== */
 
     private void menuStatistiques() {
         System.out.println("\n╔═══════════════════════════════════════╗");
@@ -254,7 +268,7 @@ public class AdminUI implements MenuInterface {
             case "1" -> afficherStatistiquesGenerales();
             case "2" -> afficherConsultationsParPeriode();
             case "3" -> afficherPlanningProfessionnel();
-            case "0" -> {}
+            case "0" -> { }
             default -> System.out.println("❌ Choix invalide");
         }
     }
@@ -274,56 +288,56 @@ public class AdminUI implements MenuInterface {
         LocalDate debut = parseDate(sc.nextLine().trim());
         System.out.print("Date de fin (YYYY-MM-DD): ");
         LocalDate fin = parseDate(sc.nextLine().trim());
-        
+
         if (debut == null || fin == null) {
             System.out.println("❌ Dates invalides");
             return;
         }
-        
+
         List<Consultation> consultationsPeriode = consultationService.getConsultationsParPeriode(
-            debut.atStartOfDay(), fin.atTime(23, 59));
-        
+                debut.atStartOfDay(), fin.atTime(23, 59));
+
         System.out.println("\n=== CONSULTATIONS DU " + debut + " AU " + fin + " ===");
         System.out.println("Nombre total : " + consultationsPeriode.size());
-        
-        // Grouper par statut
+
         Map<String, Long> parStatut = consultationsPeriode.stream()
-            .collect(Collectors.groupingBy(Consultation::getStatut, Collectors.counting()));
-        
+                .collect(Collectors.groupingBy(Consultation::getStatut, Collectors.counting()));
+
         System.out.println("\nPar statut :");
-        parStatut.forEach((statut, count) -> 
-            System.out.println("  - " + statut + " : " + count));
-        
-        // Grouper par professionnel
+        parStatut.forEach((statut, count) ->
+                System.out.println("  - " + statut + " : " + count));
+
         Map<String, Long> parPro = consultationsPeriode.stream()
-            .collect(Collectors.groupingBy(
-                c -> c.getProfessionnel().getNom() + " " + c.getProfessionnel().getPrenom(),
-                Collectors.counting()));
-        
+                .collect(Collectors.groupingBy(
+                        c -> c.getProfessionnel().getNom() + " " + c.getProfessionnel().getPrenom(),
+                        Collectors.counting()));
+
         System.out.println("\nPar professionnel :");
-        parPro.forEach((pro, count) -> 
-            System.out.println("  - " + pro + " : " + count));
+        parPro.forEach((pro, count) ->
+                System.out.println("  - " + pro + " : " + count));
     }
 
     private void afficherPlanningProfessionnel() {
         String login = lireChaine("Login du professionnel: ");
         com.medipass.user.ProfessionnelSante pro = adminService.findProfessionnel(login);
-        
+
         if (pro == null) {
             System.out.println("❌ Professionnel non trouvé");
             return;
         }
-        
+
         System.out.print("Date de début (YYYY-MM-DD) [Entrée pour cette semaine]: ");
         String input = sc.nextLine().trim();
-        LocalDate debut = input.isEmpty() ? 
-            LocalDate.now().with(java.time.DayOfWeek.MONDAY) : 
-            parseDate(input);
-        
+        LocalDate debut = input.isEmpty()
+                ? LocalDate.now().with(java.time.DayOfWeek.MONDAY)
+                : parseDate(input);
+
         if (debut != null) {
             System.out.println(consultationService.afficherPlanningSemaine(pro, debut));
         }
     }
+
+    /* ===================== COMPTE / SAUVEGARDE ===================== */
 
     private void creerProfessionnel() {
         System.out.println("\n--- Création d'un professionnel de santé ---");
@@ -333,8 +347,10 @@ public class AdminUI implements MenuInterface {
         String prenom = lireChaine("Prénom: ");
         String specialite = lireChaine("Spécialité: ");
 
-        com.medipass.user.ProfessionnelSante pro = new com.medipass.user.ProfessionnelSante(
-                login, mdp, "PRO", nom, prenom, specialite, "NUM" + System.currentTimeMillis() % 10000);
+        com.medipass.user.ProfessionnelSante pro =
+                new com.medipass.user.ProfessionnelSante(
+                        login, mdp, "PRO", nom, prenom, specialite,
+                        "NUM" + System.currentTimeMillis() % 10000);
 
         if (adminService.creerCompte(pro)) {
             System.out.println("✓ Professionnel créé. Vous pouvez maintenant vous connecter.");
@@ -347,18 +363,20 @@ public class AdminUI implements MenuInterface {
     private void supprimerUtilisateur() {
         System.out.println("\n--- Suppression d'un utilisateur ---");
         String login = lireChaine("Login de l'utilisateur à supprimer: ");
-        
+
+        // Vérifier que l'utilisateur existe
         if (adminService.findUtilisateur(login) == null) {
             System.out.println("❌ Utilisateur introuvable.");
             return;
         }
 
+        // Empêcher l'admin de se supprimer lui-même
         if (login.equals(admin.getLoginID())) {
             System.out.println("❌ Vous ne pouvez pas supprimer votre propre compte.");
             return;
         }
 
-        System.out.println("⚠️ ATTENTION : Cette action est irréversible !");
+        System.out.println("⚠️  ATTENTION : Cette action est irréversible !");
         String password = lireChaine("Confirmez avec votre mot de passe administrateur: ");
 
         if (admin.seConnecter(admin.getLoginID(), password)) {
@@ -381,8 +399,8 @@ public class AdminUI implements MenuInterface {
         System.out.println("(Données sauvegardées)");
     }
 
-    // --- Méthodes utilitaires pour la saisie sécurisée ---
-    
+    /* ===================== UTILITAIRES ===================== */
+
     private String lireChaine(String prompt) {
         System.out.print(prompt);
         return sc.nextLine().trim();
