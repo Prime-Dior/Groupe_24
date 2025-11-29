@@ -9,15 +9,20 @@ import java.util.List;
 import com.medipass.model.*;
 import com.medipass.user.*;
 
+/**
+ * Service de persistance des données en fichiers CSV
+ */
 public class DataService {
 
     private static final String PATIENTS_FILE = "patients.csv";
     private static final String PROS_FILE = "pros.csv";
     private static final String CONSULTATIONS_FILE = "consultations.csv";
+    private static final String ANTECEDENTS_FILE = "antecedents.csv";
+
+    // ========== PATIENTS ==========
 
     public void savePatients(List<Patient> patients) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(PATIENTS_FILE))) {
-            // Écrire l'en-tête
             writer.println("id;nom;prenom;numeroSecuriteSociale;groupeSanguin");
             for (Patient p : patients) {
                 writer.printf("%d;%s;%s;%s;%s\n",
@@ -44,7 +49,6 @@ public class DataService {
             String line;
             boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
-                // Ignorer la première ligne (en-tête)
                 if (isHeader) {
                     isHeader = false;
                     continue;
@@ -72,14 +76,15 @@ public class DataService {
         return patients;
     }
 
+    // ========== PROFESSIONNELS ==========
+
     public void saveProfessionnels(List<ProfessionnelSante> pros) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(PROS_FILE))) {
-            // Écrire l'en-tête
             writer.println("login;password;nom;prenom;specialite;numeroOrdre;horairesDisponibilite");
             for (ProfessionnelSante p : pros) {
                 writer.printf("%s;%s;%s;%s;%s;%s;%s\n",
                         p.getLoginID(),
-                        p.getPassword(), // Note: In real app, should be hashed
+                        p.getPassword(),
                         p.getNom(),
                         p.getPrenom(),
                         p.getSpecialite(),
@@ -103,7 +108,6 @@ public class DataService {
             String line;
             boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
-                // Ignorer la première ligne (en-tête)
                 if (isHeader) {
                     isHeader = false;
                     continue;
@@ -129,9 +133,10 @@ public class DataService {
         return pros;
     }
 
+    // ========== CONSULTATIONS ==========
+
     public void saveConsultations(List<Consultation> consultations) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(CONSULTATIONS_FILE))) {
-            // Écrire l'en-tête
             writer.println("dateHeure;motif;professionnelLogin;patientId;dureeMinutes;statut;observations;diagnostic");
             for (Consultation c : consultations) {
                 writer.printf("%s;%s;%s;%d;%d;%s;%s;%s\n",
@@ -161,7 +166,6 @@ public class DataService {
             String line;
             boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
-                // Ignorer la première ligne (en-tête)
                 if (isHeader) {
                     isHeader = false;
                     continue;
@@ -212,5 +216,75 @@ public class DataService {
             System.err.println("Erreur chargement consultations: " + e.getMessage());
         }
         return consultations;
+    }
+
+    // ========== ANTÉCÉDENTS ==========
+
+    /**
+     * Sauvegarde les antécédents de tous les patients
+     */
+    public void saveAntecedents(List<Patient> patients) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(ANTECEDENTS_FILE))) {
+            writer.println("patientId;type;description;date;gravite;actif");
+            for (Patient p : patients) {
+                for (Antecedent a : p.getDossierMedical().getAntecedents()) {
+                    writer.printf("%d;%s;%s;%s;%s;%s\n",
+                        p.getId(),
+                        a.getType(),
+                        a.getDescription() != null ? a.getDescription().replace(";", ",") : "",
+                        a.getDate(),
+                        a.getGravite(),
+                        a.isActif()
+                    );
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erreur sauvegarde antécédents: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Charge les antécédents depuis le fichier CSV
+     */
+    public void loadAntecedents(List<Patient> patients) {
+        File file = new File(ANTECEDENTS_FILE);
+        if (!file.exists()) {
+            return;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            boolean isHeader = true;
+            while ((line = reader.readLine()) != null) {
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
+                String[] parts = line.split(";");
+                if (parts.length >= 5) {
+                    try {
+                        int patientId = Integer.parseInt(parts[0]);
+                        Patient patient = patients.stream()
+                            .filter(p -> p.getId() == patientId)
+                            .findFirst().orElse(null);
+                        
+                        if (patient != null) {
+                            Antecedent ant = new Antecedent(
+                                parts[1], // type
+                                parts[2], // description
+                                LocalDate.parse(parts[3]), // date
+                                parts[4], // gravité
+                                parts.length > 5 ? Boolean.parseBoolean(parts[5]) : true // actif
+                            );
+                            patient.getDossierMedical().ajouterAntecedent(ant);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Erreur parsing antécédent: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur chargement antécédents: " + e.getMessage());
+        }
     }
 }

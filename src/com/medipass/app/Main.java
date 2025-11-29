@@ -32,10 +32,10 @@ public class Main {
     public static void main(String[] args) {
         initializationSysteme();
 
-        System.out.println("╔════════════════════════════════════╗");
-        System.out.println("║        BIENVENUE À MEDIPASS        ║");
-        System.out.println("║  Système d'Information Médical     ║");
-        System.out.println("╚════════════════════════════════════╝");
+        System.out.println("╔═══════════════════════════════════════╗");
+        System.out.println("║        BIENVENUE À MEDIPASS           ║");
+        System.out.println("║  Système d'Information Médical        ║");
+        System.out.println("╚═══════════════════════════════════════╝");
 
         boolean running = true;
         while (running) {
@@ -44,7 +44,7 @@ public class Main {
 
             switch (choix) {
                 case "1" -> handleAuthentification();
-                case "2" -> {
+                case "0" -> {
                     sauvegarderDonnees();
                     System.out.println("Au revoir!");
                     running = false;
@@ -56,12 +56,12 @@ public class Main {
     }
 
     private static void afficherMenuPrincipal() {
-        System.out.println("\n╔════════════════════════════════╗");
-        System.out.println("║     MENU PRINCIPAL             ║");
-        System.out.println("╠════════════════════════════════╣");
-        System.out.println("║ 1) Se connecter                ║");
-        System.out.println("║ 2) Quitter                     ║");
-        System.out.println("╚════════════════════════════════╝");
+        System.out.println("\n╔═══════════════════════════════════════╗");
+        System.out.println("║     MENU PRINCIPAL                    ║");
+        System.out.println("╠═══════════════════════════════════════╣");
+        System.out.println("║ 1) Se connecter                       ║");
+        System.out.println("║ 0) Quitter                            ║");
+        System.out.println("╚═══════════════════════════════════════╝");
         System.out.print("Votre choix: ");
     }
 
@@ -110,22 +110,35 @@ public class Main {
 
         if (!patients.isEmpty() || !pros.isEmpty()) {
             System.out.println("Chargement des données...");
-            for (Patient p : patients) patientService.creerPatient(p);
+            
+            // Charger les patients
+            for (Patient p : patients) {
+                patientService.creerPatient(p);
+            }
+            
+            // Charger les professionnels
             for (ProfessionnelSante p : pros) {
                 adminService.creerCompte(p);
                 auth.register(p);
             }
             
-            // Charger consultations après avoir chargé patients et pros
-            List<Consultation> consultations = dataService.loadConsultations(patientService.getPatients(), adminService.getProfessionnels());
+            // Charger les consultations après avoir chargé patients et pros
+            List<Consultation> consultations = dataService.loadConsultations(
+                patientService.getPatients(), 
+                adminService.getProfessionnels()
+            );
            
             for(Consultation c : consultations) {
                 consultationService.ajouterConsultationExistante(c);
             }
 
-            System.out.println("✓ Données chargées: " + patients.size() + " patients, " + pros.size() + " professionnels.");
+            // Charger les antécédents
+            dataService.loadAntecedents(patientService.getPatients());
+
+            System.out.println("✓ Données chargées: " + patients.size() + " patients, " + 
+                pros.size() + " professionnels, " + consultations.size() + " consultations.");
         } else {
-            System.out.println("? Système initialisé. Aucune donnée sauvegardée.");
+            System.out.println("ℹ Système initialisé. Aucune donnée sauvegardée.");
             sauvegarderDonnees();
         }
     }
@@ -137,6 +150,7 @@ public class Main {
         dataService.savePatients(patientService.getPatients());
         dataService.saveProfessionnels(adminService.getProfessionnels());
         dataService.saveConsultations(consultationService.getConsultations());
+        dataService.saveAntecedents(patientService.getPatients());
         System.out.println("(Données sauvegardées)");
     }
 

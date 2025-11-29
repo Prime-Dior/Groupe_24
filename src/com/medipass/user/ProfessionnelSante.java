@@ -32,27 +32,50 @@ public class ProfessionnelSante extends Utilisateur {
         this.horairesDisponibilite = "9h-17h";
     }
 
-    // Crée un patient (ici stub, la logique réelle se fait dans PatientService)
+    /**
+     * Crée un patient (ici stub, la logique réelle se fait dans PatientService)
+     */
     public boolean creerPatient(Patient p){ 
         return true; 
     }
 
+    /**
+     * Ajoute une consultation au planning
+     */
     public void ajouterConsultation(Consultation c){
         planning.add(c);
     }
 
+    /**
+     * Annule une consultation (marque comme annulée au lieu de supprimer)
+     */
     public boolean annulerConsultation(int idConsultation){
-        return planning.removeIf(c -> c.getIdConsultation() == idConsultation);
+        for (Consultation c : planning) {
+            if (c.getIdConsultation() == idConsultation) {
+                c.setStatut("annulée");
+                return true;
+            }
+        }
+        return false;
     }
 
+    /**
+     * Récupère le planning complet
+     */
     public List<Consultation> getPlanning(){ 
         return planning; 
     }
 
+    /**
+     * Récupère le nombre de consultations
+     */
     public int getNombreConsultations(){
         return planning.size();
     }
 
+    /**
+     * Récupère les consultations effectuées
+     */
     public List<Consultation> getConsultationsEffectuees(){
         List<Consultation> effectuees = new ArrayList<>();
         for(Consultation c : planning){
@@ -63,7 +86,9 @@ public class ProfessionnelSante extends Utilisateur {
         return effectuees;
     }
 
-    // Vérification de disponibilité avec gestion des chevauchements
+    /**
+     * Vérification de disponibilité avec gestion des chevauchements
+     */
     public boolean estDisponiblePour(Consultation nouvelleConsultation){
         LocalDateTime debut1 = nouvelleConsultation.getDateHeure();
         LocalDateTime fin1 = nouvelleConsultation.getFinConsultation();
@@ -83,6 +108,7 @@ public class ProfessionnelSante extends Utilisateur {
         return true;
     }
 
+    // Getters
     public String getSpecialite(){ 
         return specialite; 
     }
@@ -95,10 +121,14 @@ public class ProfessionnelSante extends Utilisateur {
         return horairesDisponibilite;
     }
 
+    // Setters
     public void setHorairesDisponibilite(String horaires){
         this.horairesDisponibilite = horaires;
     }
 
+    /**
+     * Ajoute un antécédent au dossier d'un patient
+     */
     public void ajouterAntecedentPatient(Patient patient, Antecedent antecedent){
         if(patient != null && patient.getDossierMedical() != null){
             patient.getDossierMedical().ajouterAntecedent(antecedent);
