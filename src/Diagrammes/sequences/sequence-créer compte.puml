@@ -1,22 +1,25 @@
-@startuml CreerCompte
-title Création d'un compte utilisateur
+@startuml
+title Création d'un compte utilisateur 
 
 actor "Administrateur" as Admin
-participant "InterfaceConsole" as UI
+participant "AdminUI" as UI
 participant "AdministrateurService" as AdminService
 participant "AuthentificationService" as Auth
+participant "ProfessionnelSante" as ProfObj
 database "BaseDeDonnees" as DB
 
 Admin -> UI : Demander création compte
 activate UI
 
-UI --> Admin : Choix type utilisateur
-Admin -> UI : Saisir informations et type
+UI --> Admin : Choix type utilisateur\n(Professionnel de santé uniquement)
 
-UI -> AdminService : creerCompte(type, infosUtilisateur)
+Admin -> UI : Saisir informations\n(login, mdp, nom, prénom, spécialité, droits d'accès)
+
+UI -> AdminService : creerCompte(professionnel)
 activate AdminService
 
-AdminService -> Auth : verifierIdentifiant(loginID)
+== Vérification disponibilité login ==
+AdminService -> Auth : findUser(loginID)
 activate Auth
 
 Auth -> DB : rechercherUtilisateur(loginID)
@@ -25,26 +28,71 @@ DB --> Auth : resultat
 deactivate DB
 
 alt LoginID disponible
-    Auth --> AdminService : disponible
+    Auth --> AdminService : null
     deactivate Auth
-
-    AdminService -> DB : creerUtilisateur(type, infos)
+    
+    == Création du professionnel ==
+    AdminService -> ProfObj : new ProfessionnelSante(infos, accessLevels)
+    activate ProfObj
+    
+    note right of ProfObj
+      Droits d'accès = chaîne de chiffres
+      1 : Gestion des patients
+      2 : Programmer une consultation
+      3 : Voir le planning
+      4 : Clôturer une consultation
+      5 : Gestion des antécédents
+    end note
+    
+    ProfObj --> AdminService : professionnel créé
+    deactivate ProfObj
+    
+    == Enregistrement ==
+    AdminService -> Auth : register(professionnel)
+    activate Auth
+    Auth -> DB : sauvegarderUtilisateur(professionnel)
     activate DB
-    DB --> AdminService : utilisateurCree
+    DB --> Auth : utilisateurCree
     deactivate DB
-
+    Auth --> AdminService : enregistré
+    deactivate Auth
+    
+    AdminService -> DB : saveProfessionnels(professionnels)
+    activate DB
+    DB --> AdminService : sauvegardé
+    deactivate DB
+    
     AdminService --> UI : compteCree
     deactivate AdminService
-    UI --> Admin : Confirmation création
-
+    
+    UI --> Admin : ✓ Professionnel créé
+    
+    == Gestion des permissions (optionnel) ==
+    Admin -> UI : Gérer droits d'accès
+    UI --> Admin : Menu permissions
+    Admin -> UI : Modifier chaîne de droits (1..5)
+    
+    UI -> AdminService : findProfessionnel(loginID)
+    activate AdminService
+    AdminService --> UI : professionnel
+    deactivate AdminService
+    
+    UI -> AdminService : modifierDroitAcces(loginID, accessLevels)
+    activate AdminService
+    AdminService -> DB : saveProfessionnels(professionnels)
+    activate DB
+    DB --> AdminService : sauvegardé
+    deactivate DB
+    AdminService --> UI : droitsModifies
+    deactivate AdminService
+    
+    UI --> Admin : ✓ Permissions modifiées
+    
 else LoginID existant
-    Auth --> AdminService : nonDisponible
+    Auth --> AdminService : utilisateur existant
     deactivate Auth
     AdminService --> UI : erreurLoginExistant
     deactivate AdminService
-    UI --> Admin : Message erreur
+    UI --> Admin : ❌ Login déjà utilisé
 end
-
-deactivate UI
-
 @enduml
