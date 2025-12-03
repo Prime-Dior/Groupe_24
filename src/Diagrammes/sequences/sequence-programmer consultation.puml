@@ -1,17 +1,17 @@
-@startuml ConsulterMajDossier
-title Consulter et mettre à jour le dossier 
+@startuml 
+title Programmer une consultation
 
 actor "Professionnel de santé" as ProfSante
 participant "ProfessionelUI" as UI
 participant "PatientService" as PatientService
-participant "ConsultationService" as ConsService
+participant "ConsultationService" as ConsultService
+participant "ProfessionnelSante" as ProfObj
 participant "Patient" as PatientObj
 participant "DossierMedical" as Dossier
-participant "ProfessionnelSante" as ProfObj
 participant "DataService" as DataService
 
-== Consultation du dossier ==
-ProfSante -> UI : Consulter dossier patient
+== Sélection du patient ==
+ProfSante -> UI : Demander programmation consultation
 activate UI
 
 UI --> ProfSante : Demande idPatient
@@ -23,54 +23,48 @@ PatientService --> UI : patient ou null
 deactivate PatientService
 
 alt Patient trouvé
-    UI -> PatientObj : getDossierMedical()
-    activate PatientObj
-    PatientObj --> UI : dossierMedical
-    deactivate PatientObj
+    UI --> ProfSante : Afficher infos patient\n+ demander date/heure/motif
 
-    UI -> Dossier : getAntecedents(), getConsultations()
-    activate Dossier
-    Dossier --> UI : listes antécédents et consultations
-    deactivate Dossier
+    ProfSante -> UI : Saisir dateHeure, durée, motif
 
-    ' Filtre par spécialité du professionnel connecté
-    UI -> ProfObj : getSpecialite()
-    activate ProfObj
-    ProfObj --> UI : specialiteCourante
-    deactivate ProfObj
+    ' Récupération du professionnel connecté
+    UI -> ProfObj : (profesionnel courant)
 
-    UI --> ProfSante : Affichage dossier\n+ consultations de specialiteCourante
+    == Appel du service de consultation ==
+    UI -> ConsultService : programmerConsultation(dateHeure, motif, ProfObj, PatientObj)
+    activate ConsultService
 
-    == Ajout d'un antécédent ==
-    ProfSante -> UI : Choisir "Ajouter antécédent"
+    ' Dans le service : validations et disponibilités
+    ConsultService -> ConsultService : vérifier paramètres\n+ date future\n+ motif non vide
 
-    ' Vérification permission via accessLevels (chiffre 5)
-    UI -> ProfObj : getAccessLevels()
-    activate ProfObj
-    ProfObj --> UI : accessLevels
-    deactivate ProfObj
+    ConsultService -> ProfObj : estDisponiblePour(nouvelleConsultation)
+    alt Professionnel disponible
+        ConsultService -> PatientObj : getDossierMedical()
+        activate PatientObj
+        PatientObj --> ConsultService : dossierMedical
+        deactivate PatientObj
 
-    alt accessLevels contient '5'
-        UI --> ProfSante : Saisie type/description/date/gravité/statut
-        ProfSante -> UI : Valider
+        ConsultService -> Dossier : ajouterConsultation(nouvelleConsultation)
+        ConsultService -> ProfObj : ajouterConsultation(nouvelleConsultation)
+        ConsultService -> ConsultService : ajouter à la liste consultations
 
-        UI -> PatientService : ajouterAntecedentAuPatient(idPatient, antecedent)
-        activate PatientService
-        PatientService --> UI : success / échec
-        deactivate PatientService
+        ConsultService --> UI : true (succès)
+        deactivate ConsultService
 
-        alt success
-            UI -> DataService : saveAntecedents(patients)
-            activate DataService
-            DataService --> UI : sauvegardé
-            deactivate DataService
+        ' Mise à jour durée et sauvegarde
+        UI -> ConsultService : getConsultations()
+        ConsultService --> UI : listeConsultations
 
-            UI --> ProfSante : ✓ Antécédent ajouté
-        else échec
-            UI --> ProfSante : ❌ Erreur d'ajout
-        end
-    else pas de permission
-        UI --> ProfSante : ❌ Accès refusé (permission manquante)
+        UI -> DataService : saveConsultations(listeConsultations)
+        activate DataService
+        DataService --> UI : sauvegardé
+        deactivate DataService
+
+        UI --> ProfSante : ✓ Consultation programmée
+    else Non disponible ou invalide
+        ConsultService --> UI : false (erreur/conflict)
+        deactivate ConsultService
+        UI --> ProfSante : ❌ Impossible de programmer\n(conflit ou erreur)
     end
 
 else Patient introuvable
@@ -78,11 +72,5 @@ else Patient introuvable
 end
 
 deactivate UI
-
-note right of UI
-  Permissions = chaîne accessLevels :
-  1: patients, 2: programmation,
-  3: planning, 4: clôture, 5: antécédents.
-end note
 
 @enduml
