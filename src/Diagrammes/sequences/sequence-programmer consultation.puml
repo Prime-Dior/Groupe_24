@@ -1,68 +1,88 @@
-@startuml ProgrammerConsultation
-title Programmer une consultation
+@startuml ConsulterMajDossier
+title Consulter et mettre à jour le dossier 
 
 actor "Professionnel de santé" as ProfSante
-participant "InterfaceConsole" as UI
-participant "ConsultationService" as ConsultService
-participant "ProfessionnelSante" as ProfObj
-participant "Patient" as Patient
+participant "ProfessionelUI" as UI
+participant "PatientService" as PatientService
+participant "ConsultationService" as ConsService
+participant "Patient" as PatientObj
 participant "DossierMedical" as Dossier
-database "BaseDeDonnees" as DB
+participant "ProfessionnelSante" as ProfObj
+participant "DataService" as DataService
 
-ProfSante -> UI : Demander programmation consultation
+== Consultation du dossier ==
+ProfSante -> UI : Consulter dossier patient
 activate UI
 
-UI -> DB : listerPatients()
-activate DB
-DB --> UI : listePatients
-deactivate DB
+UI --> ProfSante : Demande idPatient
+ProfSante -> UI : Saisir idPatient
 
-UI --> ProfSante : Afficher liste patients
-ProfSante -> UI : Sélectionner patient
+UI -> PatientService : findPatientById(idPatient)
+activate PatientService
+PatientService --> UI : patient ou null
+deactivate PatientService
 
-UI -> DB : rechercherPatient(idPatient)
-activate DB
-DB --> UI : patient
-deactivate DB
+alt Patient trouvé
+    UI -> PatientObj : getDossierMedical()
+    activate PatientObj
+    PatientObj --> UI : dossierMedical
+    deactivate PatientObj
 
-UI --> ProfSante : Formulaire consultation
-ProfSante -> UI : Saisir date, heure, motif
+    UI -> Dossier : getAntecedents(), getConsultations()
+    activate Dossier
+    Dossier --> UI : listes antécédents et consultations
+    deactivate Dossier
 
-UI -> ConsultService : programmerConsultation(date, heure, motif, idProf, idPatient)
-activate ConsultService
+    ' Filtre par spécialité du professionnel connecté
+    UI -> ProfObj : getSpecialite()
+    activate ProfObj
+    ProfObj --> UI : specialiteCourante
+    deactivate ProfObj
 
-ConsultService -> DB : chargerProfessionnel(idProf)
-activate DB
-DB --> ConsultService : professionnel
-deactivate DB
+    UI --> ProfSante : Affichage dossier\n+ consultations de specialiteCourante
 
-ConsultService -> ProfObj : estDisponible(date, heure)
-alt Disponible
-    ConsultService -> DB : creerConsultation(date, heure, motif, idProf, idPatient)
-    activate DB
-    DB --> ConsultService : consultationCreee
-    deactivate DB
+    == Ajout d'un antécédent ==
+    ProfSante -> UI : Choisir "Ajouter antécédent"
 
-    ConsultService -> DB : chargerDossierMedical(idPatient)
-    activate DB
-    DB --> ConsultService : dossierMedical
-    deactivate DB
+    ' Vérification permission via accessLevels (chiffre 5)
+    UI -> ProfObj : getAccessLevels()
+    activate ProfObj
+    ProfObj --> UI : accessLevels
+    deactivate ProfObj
 
-    ConsultService -> Dossier : ajouterConsultation(consultation)
-    ConsultService -> DB : sauvegarderConsultation(consultation)
-    activate DB
-    DB --> ConsultService : confirmation
-    deactivate DB
+    alt accessLevels contient '5'
+        UI --> ProfSante : Saisie type/description/date/gravité/statut
+        ProfSante -> UI : Valider
 
-    ConsultService --> UI : succes
-    deactivate ConsultService
-    UI --> ProfSante : Confirmation programmation
-else Non disponible
-    ConsultService --> UI : erreurDisponibilite
-    deactivate ConsultService
-    UI --> ProfSante : Message indisponibilité
+        UI -> PatientService : ajouterAntecedentAuPatient(idPatient, antecedent)
+        activate PatientService
+        PatientService --> UI : success / échec
+        deactivate PatientService
+
+        alt success
+            UI -> DataService : saveAntecedents(patients)
+            activate DataService
+            DataService --> UI : sauvegardé
+            deactivate DataService
+
+            UI --> ProfSante : ✓ Antécédent ajouté
+        else échec
+            UI --> ProfSante : ❌ Erreur d'ajout
+        end
+    else pas de permission
+        UI --> ProfSante : ❌ Accès refusé (permission manquante)
+    end
+
+else Patient introuvable
+    UI --> ProfSante : ❌ Patient non trouvé
 end
 
 deactivate UI
+
+note right of UI
+  Permissions = chaîne accessLevels :
+  1: patients, 2: programmation,
+  3: planning, 4: clôture, 5: antécédents.
+end note
 
 @enduml
