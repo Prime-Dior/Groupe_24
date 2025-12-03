@@ -21,10 +21,8 @@ class Patient {
   - numeroSecuriteSociale : String
   - groupeSanguin : String
   - actif : boolean
-  - specialitePrincipale : String
   + getNumeroSecuriteSociale() : String
   + getGroupeSanguin() : String
-  + getSpecialitePrincipale() : String
   + isActif() : boolean
   + activer() : void
   + desactiver() : void
@@ -34,14 +32,8 @@ class Patient {
 class DossierMedical {
   - idDossier : int
   - dateCreation : LocalDateTime
-  - archive : boolean
-  - raisonArchivage : String
-  - dateArchivage : LocalDateTime
   - antecedents : List<Antecedent>
   - consultations : List<Consultation>
-  + isArchive() : boolean
-  + archiver(raison : String) : void
-  + restaurer() : void
   + getAntecedents() : List<Antecedent>
   + getConsultations() : List<Consultation>
   + ajouterAntecedent(a : Antecedent) : void
@@ -65,8 +57,7 @@ class Consultation {
   - observations : String
   - diagnostic : String
   - statut : String
-  - specialite : String
-  + getSpecialite() : String
+  + getStatut() : String
 }
 
 class Utilisateur {
@@ -90,11 +81,7 @@ class Administrateur {
   + supprimerCompte(login : String) : boolean
   + activerCompte(login : String) : boolean
   + desactiverCompte(login : String) : boolean
-  + activerPatient(p : Patient) : void
-  + desactiverPatient(p : Patient) : void
-  + definirSpecialiteProfessionnel(login : String, specialite : String) : boolean
   + modifierContactUtilisateur(login : String, email : String, telephone : String) : boolean
-  + afficherStatistiques() : String
 }
 
 class ProfessionnelSante {
@@ -103,14 +90,8 @@ class ProfessionnelSante {
   - horairesDisponibilite : String
   - planning : List<Consultation>
   + getSpecialite() : String
+  + getPlanning() : List<Consultation>
   + estDisponiblePour(c : Consultation) : boolean
-  + creerPatient(nom : String, prenom : String, numSS : String, groupe : String) : Patient
-  + creerDossierMedical(p : Patient) : DossierMedical
-  + ajouterAntecedentPatient(p : Patient, a : Antecedent) : boolean
-  + programmerConsultation(date : LocalDateTime, motif : String, patient : Patient) : boolean
-  + cloturerConsultation(id : int, obs : String, diag : String) : boolean
-  + annulerConsultation(id : int) : boolean
-  + consulterPlanning() : List<Consultation>
 }
 
 class PatientService {
@@ -126,6 +107,7 @@ class ConsultationService {
   - consultations : List<Consultation>
   + programmerConsultation(dateHeure : LocalDateTime, motif : String, pro : ProfessionnelSante, patient : Patient) : boolean
   + annulerConsultation(id : int) : boolean
+  + getConsultations() : List<Consultation>
   + getConsultationsParSpecialite(specialite : String) : List<Consultation>
 }
 
@@ -133,6 +115,7 @@ class AdministrateurService {
   - utilisateurs : List<Utilisateur>
   - professionnels : List<ProfessionnelSante>
   + creerCompte(u : Utilisateur) : boolean
+  + findProfessionnelsBySpecialite(specialite : String) : List<ProfessionnelSante>
   + getProfessionnels() : List<ProfessionnelSante>
 }
 
@@ -163,6 +146,7 @@ PatientService ..> Patient
 ConsultationService ..> Consultation
 ConsultationService ..> ProfessionnelSante
 AdministrateurService ..> Utilisateur
+AdministrateurService ..> ProfessionnelSante
 Administrateur ..> StatistiquesService
 StatistiquesService ..> Patient
 StatistiquesService ..> ProfessionnelSante
