@@ -1,0 +1,172 @@
+@startuml MediPass
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor LightBlue
+  BorderColor Black
+}
+
+abstract class Personne {
+  # id : int
+  # nom : String
+  # prenom : String
+  + getId() : int
+  + getNom() : String
+  + getPrenom() : String
+  + getAge() : int
+}
+
+class Patient {
+  - numeroSecuriteSociale : String
+  - groupeSanguin : String
+  - actif : boolean
+  - specialitePrincipale : String
+  + getNumeroSecuriteSociale() : String
+  + getGroupeSanguin() : String
+  + getSpecialitePrincipale() : String
+  + isActif() : boolean
+  + activer() : void
+  + desactiver() : void
+  + getDossierMedical() : DossierMedical
+}
+
+class DossierMedical {
+  - idDossier : int
+  - dateCreation : LocalDateTime
+  - archive : boolean
+  - raisonArchivage : String
+  - dateArchivage : LocalDateTime
+  - antecedents : List<Antecedent>
+  - consultations : List<Consultation>
+  + isArchive() : boolean
+  + archiver(raison : String) : void
+  + restaurer() : void
+  + getAntecedents() : List<Antecedent>
+  + getConsultations() : List<Consultation>
+  + ajouterAntecedent(a : Antecedent) : void
+  + ajouterConsultation(c : Consultation) : void
+}
+
+class Antecedent {
+  - idAntecedent : int
+  - type : String
+  - description : String
+  - date : LocalDate
+  - gravite : String
+  - actif : boolean
+}
+
+class Consultation {
+  - idConsultation : int
+  - dateHeure : LocalDateTime
+  - dureeMinutes : int
+  - motif : String
+  - observations : String
+  - diagnostic : String
+  - statut : String
+  - specialite : String
+  + getSpecialite() : String
+}
+
+class Utilisateur {
+  # loginID : String
+  # motDePasse : String
+  # role : String
+  # actif : boolean
+  # nom : String
+  # prenom : String
+  # email : String
+  # telephone : String
+  + getLoginID() : String
+  + getRole() : String
+  + isActif() : boolean
+  + seConnecter(login : String, mdp : String) : boolean
+}
+
+class Administrateur {
+  - comptes : Map<String, Utilisateur>
+  + creerCompte(u : Utilisateur) : boolean
+  + supprimerCompte(login : String) : boolean
+  + activerCompte(login : String) : boolean
+  + desactiverCompte(login : String) : boolean
+  + activerPatient(p : Patient) : void
+  + desactiverPatient(p : Patient) : void
+  + definirSpecialiteProfessionnel(login : String, specialite : String) : boolean
+  + modifierContactUtilisateur(login : String, email : String, telephone : String) : boolean
+  + afficherStatistiques() : String
+}
+
+class ProfessionnelSante {
+  - specialite : String
+  - numeroOrdre : String
+  - horairesDisponibilite : String
+  - planning : List<Consultation>
+  + getSpecialite() : String
+  + estDisponiblePour(c : Consultation) : boolean
+  + creerPatient(nom : String, prenom : String, numSS : String, groupe : String) : Patient
+  + creerDossierMedical(p : Patient) : DossierMedical
+  + ajouterAntecedentPatient(p : Patient, a : Antecedent) : boolean
+  + programmerConsultation(date : LocalDateTime, motif : String, patient : Patient) : boolean
+  + cloturerConsultation(id : int, obs : String, diag : String) : boolean
+  + annulerConsultation(id : int) : boolean
+  + consulterPlanning() : List<Consultation>
+}
+
+class PatientService {
+  - patients : List<Patient>
+  + creerPatient(p : Patient) : boolean
+  + findPatientById(id : int) : Patient
+  + getPatients() : List<Patient>
+  + getNombrePatients() : int
+  + getPatientsParSpecialite(specialite : String) : List<Patient>
+}
+
+class ConsultationService {
+  - consultations : List<Consultation>
+  + programmerConsultation(dateHeure : LocalDateTime, motif : String, pro : ProfessionnelSante, patient : Patient) : boolean
+  + annulerConsultation(id : int) : boolean
+  + getConsultationsParSpecialite(specialite : String) : List<Consultation>
+}
+
+class AdministrateurService {
+  - utilisateurs : List<Utilisateur>
+  - professionnels : List<ProfessionnelSante>
+  + creerCompte(u : Utilisateur) : boolean
+  + getProfessionnels() : List<ProfessionnelSante>
+}
+
+class StatistiquesService {
+  + getNombrePatients(patients : List<Patient>) : int
+  + getNombreProfessionnels(pros : List<ProfessionnelSante>) : int
+  + getProfessionnelsParSpecialite(pros : List<ProfessionnelSante>) : Map<String, Long>
+  + getConsultationsParSpecialite(consultations : List<Consultation>) : Map<String, Long>
+}
+
+class AuthentificationService {
+  - users : Map<String, Utilisateur>
+  + login(login : String, mdp : String) : boolean
+  + getCurrentUser() : Utilisateur
+}
+
+Personne <|-- Patient
+Utilisateur <|-- Administrateur
+Utilisateur <|-- ProfessionnelSante
+
+Patient "1" *-- "1" DossierMedical
+DossierMedical "1" *-- "0..*" Antecedent
+DossierMedical "1" *-- "0..*" Consultation
+Consultation --> ProfessionnelSante
+Consultation --> Patient
+
+PatientService ..> Patient
+ConsultationService ..> Consultation
+ConsultationService ..> ProfessionnelSante
+AdministrateurService ..> Utilisateur
+Administrateur ..> StatistiquesService
+StatistiquesService ..> Patient
+StatistiquesService ..> ProfessionnelSante
+StatistiquesService ..> Consultation
+AuthentificationService ..> Utilisateur
+
+@enduml
